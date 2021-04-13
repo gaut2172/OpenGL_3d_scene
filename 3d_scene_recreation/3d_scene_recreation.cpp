@@ -13,6 +13,7 @@
 
 #include "Camera.h"
 #include "Cylinder.h"
+#include "Sphere.h"
 
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -29,7 +30,7 @@ using namespace std; // Standard namespace
 // Unnamed namespace
 namespace
 {
-    const char* const WINDOW_TITLE = "Module 5 Milestone"; // Macro for window title
+    const char* const WINDOW_TITLE = "Breakfast"; // Macro for window title
 
     // Variables for window width and height
     const int WINDOW_WIDTH = 800;
@@ -38,8 +39,8 @@ namespace
     // Stores the GL data relative to a given mesh
     struct GLMesh
     {
-        GLuint vao[4];         // Handle for the vertex array object
-        GLuint vbos[12];     // Handles for the vertex buffer objects
+        GLuint vao[6];         // Handle for the vertex array object
+        GLuint vbos[10];     // Handles for the vertex buffer objects
         GLuint nIndices;    // Number of indices of the mesh
     };
 
@@ -59,7 +60,7 @@ namespace
     // Triangle mesh data
     GLMesh gMesh;
     // Texture
-    GLuint gTextureTable, gTextureCup, gTextureTea, gTextureLemon;
+    GLuint gTextureTable, gTextureCup, gTextureTea, gTextureLemon, gTextureOrange, gTextureCloth, gTexturePlate;
     glm::vec2 gUVScale(1.0f, 1.0f);
     // Shader program
     GLuint gProgramId;
@@ -80,6 +81,11 @@ namespace
     // cylinders
     Cylinder cylinder1(1.0f, 1.5f, 2.0f, 25, 8, true);
     Cylinder cylinder2(1.35f, 1.35f, 0.1f, 25, 8, true);
+    Cylinder cylinder3(1.4f, 1.9, 0.25f, 25, 8, true);
+
+    // sphere
+    //Sphere::Sphere(float radius, int sectors, int stacks, bool smooth)
+    Sphere sphere1(0.9, 36, 18, true);
 
     // plane
     plane plane1 = {};
@@ -126,6 +132,8 @@ void setupCupBuffers(GLMesh& mesh);
 void setupPlaneBuffers(GLMesh& mesh);
 void setupHandleBuffers(GLMesh& mesh);
 void setupTeaBuffers(GLMesh& mesh);
+void setupSphereBuffers(GLMesh& mesh);
+void setupPlateBuffers(GLMesh& mesh);
 void createPlaneMesh();
 void createCubeMesh();
 void UDestroyMesh(GLMesh& mesh);
@@ -263,13 +271,6 @@ void main()
 /* ------------------- MAIN -------------------*/
 int main(int argc, char* argv[])
 {
-
-    std::cout << "vertices.size() --" << cylinder1.vertices.size() << std::endl;
-    std::cout << "texCoord.size() --" << cylinder1.texCoords.size() << std::endl;
-    std::cout << "normals.size() --" << cylinder1.normals.size() << std::endl;
-    std::cout << "interleavedvertices.size() --" << cylinder1.interleavedVertices.size() << std::endl;
-
-
     if (!UInitialize(argc, argv, &gWindow))
         return EXIT_FAILURE;
 
@@ -278,7 +279,7 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
 
     // Load table texture
-    const char* texFilename1 = "resources/textures/wood_dark.jpg";
+    const char* texFilename1 = "resources/textures/wood.jpg";
     if (!UCreateTexture(texFilename1, gTextureTable, 0))
     {
         cout << "Failed to load texture " << texFilename1 << endl;
@@ -319,8 +320,43 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
     else {
-        cout << "Successfully loaded texture " << texFilename3 << endl;
+        cout << "Successfully loaded texture " << texFilename4 << endl;
     }
+
+    // Load orange texture
+    const char* texFilename5 = "resources/textures/orange.jpg";
+    if (!UCreateTexture(texFilename5, gTextureOrange, 0))
+    {
+        cout << "Failed to load texture " << texFilename5 << endl;
+        return EXIT_FAILURE;
+    }
+    else {
+        cout << "Successfully loaded texture " << texFilename5 << endl;
+    }
+
+    // Load cloth texture
+    const char* texFilename6 = "resources/textures/knit.jpg";
+    if (!UCreateTexture(texFilename6, gTextureCloth, 0))
+    {
+        cout << "Failed to load texture " << texFilename6 << endl;
+        return EXIT_FAILURE;
+    }
+    else {
+        cout << "Successfully loaded texture " << texFilename6 << endl;
+    }
+
+    // Load plate texture
+    const char* texFilename7 = "resources/textures/plate.png";
+    if (!UCreateTexture(texFilename7, gTexturePlate, 0))
+    {
+        cout << "Failed to load texture " << texFilename7 << endl;
+        return EXIT_FAILURE;
+    }
+    else {
+        cout << "Successfully loaded texture " << texFilename7 << endl;
+    }
+
+
 
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     glUseProgram(gProgramId);
@@ -362,6 +398,9 @@ int main(int argc, char* argv[])
     UDestroyTexture(gTextureCup);
     UDestroyTexture(gTextureTea);
     UDestroyTexture(gTextureLemon);
+    UDestroyTexture(gTextureOrange);
+    UDestroyTexture(gTextureCloth);
+    UDestroyTexture(gTexturePlate);
 
     // Release shader programs
     UDestroyShaderProgram(gProgramId);
@@ -427,16 +466,18 @@ bool UInitialize(int argc, char* argv[], GLFWwindow** window)
     createCubeMesh();
 
     // generate all the vertex arrays
-    glGenVertexArrays(4, gMesh.vao);
+    glGenVertexArrays(6, gMesh.vao);
 
     // Create all the buffers: 2 for each mesh: first one for the vertex data, second one for the indices
-    glGenBuffers(8, gMesh.vbos);
+    glGenBuffers(10, gMesh.vbos);
 
     // set up all the GPU buffer objects
     setupCupBuffers(gMesh);
     setupPlaneBuffers(gMesh);
     setupHandleBuffers(gMesh);
     setupTeaBuffers(gMesh);
+    setupSphereBuffers(gMesh);
+    setupPlateBuffers(gMesh);
 
 
     return true;
@@ -653,7 +694,6 @@ void URender()
     glUniform1f(specularIntensityLoc, gSpecularIntensity);;
     const glm::vec3 cameraPosition = gCamera.Position;
     glUniform3f(viewPositionLoc, cameraPosition.x, cameraPosition.y, cameraPosition.z);
-    //glUniform3f(objectColorLoc, gObjectColor.r, gObjectColor.g, gObjectColor.b);
 
     // tell fragment shader there is not multiple textures
     GLuint multipleTexturesLoc = glGetUniformLocation(gProgramId, "multipleTextures");
@@ -740,7 +780,7 @@ void URender()
 
 
 
-    //---------------------- PLANE ----------------------
+    //---------------------- TABLE ----------------------
 
     // Change model view before drawing plane
     scale = glm::mat4(1.0f);
@@ -781,6 +821,47 @@ void URender()
     glBindVertexArray(0);
 
 
+
+    //---------------------- CLOTH ----------------------
+
+    // Change model view before drawing plane
+    scale = glm::mat4(1.0f);
+    scale = glm::scale(scale, glm::vec3(3.0f, 1.0f, 3.0f));
+    rotation = glm::mat4(1.0f);
+    rotation = glm::rotate(rotation, -0.8f, glm::vec3(0.0f, 1.0f, 0.0f));
+    translation = glm::mat4(1.0f);
+    translation = glm::translate(translation, glm::vec3(0.0f, -0.56f, 0.0f));
+    model = translation * rotation * scale;
+
+    // Set new model matrix and specular intensity in shader's uniform variables
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
+    // change lighting components for this object
+    glUniform3f(ambientStrengthLoc, 0.00001f, 0.00001f, 0.00001f);
+    glUniform1f(specularIntensityLoc, 0.0f);
+
+    // tell fragment shader there is not multiple textures
+    glUniform1i(multipleTexturesLoc, false);
+
+    // Activate the VBOs contained within the mesh's VAO
+    glBindVertexArray(gMesh.vao[1]);
+
+    // bind textures on corresponding texture units
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gTextureCloth);
+
+    // Draw the plane
+    glDrawArrays(GL_TRIANGLES, 0, plane1.verts.size() / 8);
+    //glDrawElements(GL_TRIANGLES, gMesh.nIndices, GL_UNSIGNED_INT, NULL);
+
+    // set lighting components back to normal
+    glUniform3f(ambientStrengthLoc, gAmbientStrength.r, gAmbientStrength.g, gAmbientStrength.b);
+    glUniform1f(specularIntensityLoc, gSpecularIntensity);
+
+    // Deactivate the Vertex Array Object
+    glBindVertexArray(0);
+
+
+
     //---------------------- TEA ----------------------
 
     scale = glm::mat4(1.0f);
@@ -807,6 +888,82 @@ void URender()
 
     // Draw the tea cylinder
     glDrawElements(GL_TRIANGLES, cylinder2.getIndexCount(), GL_UNSIGNED_INT, NULL);
+
+    // Deactivate the Vertex Array Object
+    glBindVertexArray(0);
+
+
+
+    //---------------------- PLATE ----------------------
+
+    scale = glm::mat4(1.0f);
+    rotation = glm::mat4(1.0f);
+    rotation = glm::rotate(rotation, -1.5708f, glm::vec3(0.0, 1.0f, 0.0f));
+    rotation = glm::rotate(rotation, -1.5708f, glm::vec3(1.0, 0.0f, 0.0f));
+    translation = glm::mat4(1.0f);
+    translation = glm::translate(translation, glm::vec3(-3.9f, 0.08f, -1.6f));
+    model = translation * rotation * scale;
+
+    // Set new model matrix and color in shader's uniform variables
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
+    // change lighting components for this object
+    glUniform3f(ambientStrengthLoc, 0.08f, 0.08f, 0.08f);
+    glUniform1f(specularIntensityLoc, 0.5f);
+
+    // tell fragment shader there is multiple textures
+    glUniform1i(multipleTexturesLoc, false);
+
+    // Activate the VBOs contained within the mesh's VAO
+    glBindVertexArray(gMesh.vao[5]);
+
+    // bind textures on corresponding texture units
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gTexturePlate);
+
+    // Draw the tea cylinder
+    glDrawElements(GL_TRIANGLES, cylinder3.getIndexCount(), GL_UNSIGNED_INT, NULL);
+
+    // set lighting components back to normal
+    glUniform3f(ambientStrengthLoc, gAmbientStrength.r, gAmbientStrength.g, gAmbientStrength.b);
+    glUniform1f(specularIntensityLoc, gSpecularIntensity);
+
+    // Deactivate the Vertex Array Object
+    glBindVertexArray(0);
+
+
+
+
+    //---------------------- ORANGE ----------------------
+
+    scale = glm::mat4(1.0f);
+    rotation = glm::mat4(1.0f);
+    rotation = glm::rotate(rotation, 1.0f, glm::vec3(0.0, 1.0f, 0.0f));
+    translation = glm::mat4(1.0f);
+    translation = glm::translate(translation, glm::vec3(-3.5f, 0.98f, -1.3f));
+    model = translation * rotation * scale;
+
+    // Set new model matrix and color in shader's uniform variables
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
+    // change lighting components for this object
+    glUniform3f(ambientStrengthLoc, 0.08f, 0.08f, 0.08f);
+    glUniform1f(specularIntensityLoc, 0.3f);
+
+    // tell fragment shader there is multiple textures
+    glUniform1i(multipleTexturesLoc, false);
+
+    // Activate the VBOs contained within the mesh's VAO
+    glBindVertexArray(gMesh.vao[4]);
+
+    // bind textures on corresponding texture units
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gTextureOrange);
+
+    // Draw the tea cylinder
+    glDrawElements(GL_TRIANGLES, sphere1.getIndexCount(), GL_UNSIGNED_INT, NULL);
+
+    // set lighting components back to normal
+    glUniform3f(ambientStrengthLoc, gAmbientStrength.r, gAmbientStrength.g, gAmbientStrength.b);
+    glUniform1f(specularIntensityLoc, gSpecularIntensity);
 
     // Deactivate the Vertex Array Object
     glBindVertexArray(0);
@@ -854,6 +1011,7 @@ void setupCupBuffers(GLMesh& mesh)
 }
 
 
+
 /* ------------------- Set up buffers for plane -------------------*/
 void setupPlaneBuffers(GLMesh& mesh) {
     const GLuint floatsPerVertex = 3;
@@ -895,7 +1053,7 @@ void setupHandleBuffers(GLMesh& mesh) {
     glBindVertexArray(mesh.vao[2]); // activate vertex array object
 
     // Activates the first buffer
-    glBindBuffer(GL_ARRAY_BUFFER, mesh.vbos[4]);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.vbos[3]);
     // Sends vertex data to the GPU
     glBufferData(GL_ARRAY_BUFFER, cube1.verts.size() * sizeof(float), cube1.verts.data(), GL_STATIC_DRAW);
 
@@ -926,12 +1084,12 @@ void setupTeaBuffers(GLMesh& mesh)
     glBindVertexArray(mesh.vao[3]); // activate vertex array object
 
     // Activates the first buffer
-    glBindBuffer(GL_ARRAY_BUFFER, mesh.vbos[6]);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.vbos[4]);
     // Sends vertex data to the GPU
     glBufferData(GL_ARRAY_BUFFER, cylinder2.getInterleavedVertexSize(), cylinder2.getInterleavedVertices(), GL_STATIC_DRAW);
 
     // activate second buffer for index array
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.vbos[7]);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.vbos[5]);
     // stores indices[] array on GPU
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, cylinder2.getIndexSize(), cylinder2.getIndices(), GL_STATIC_DRAW);
 
@@ -950,6 +1108,80 @@ void setupTeaBuffers(GLMesh& mesh)
     glEnableVertexAttribArray(2); // enables the vertex attribute array numbered 0
 
 }
+
+
+/* ------------------- Set up buffers for orange sphere -------------------*/
+void setupSphereBuffers(GLMesh& mesh)
+{
+    const GLuint floatsPerVertex = 3;
+    const GLuint floatsPerNormals = 3;
+    const GLuint floatsPerUV = 2;
+    const GLuint floatsInEachStride = 8;
+
+    glBindVertexArray(mesh.vao[4]); // activate vertex array object
+
+    // Activates the first buffer
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.vbos[6]);
+    // Sends vertex data to the GPU
+    glBufferData(GL_ARRAY_BUFFER, sphere1.getInterleavedVertexSize(), sphere1.getInterleavedVertices(), GL_STATIC_DRAW);
+
+    // activate second buffer for index array
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.vbos[7]);
+    // stores indices[] array on GPU
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphere1.getIndexSize(), sphere1.getIndices(), GL_STATIC_DRAW);
+
+    // Strides between vertex coordinates
+    GLint stride = sphere1.getInterleavedStride();
+
+    // Create Vertex Attribute Pointers
+    // position attribute -- instructs GPU how to handle vertex position data
+    glVertexAttribPointer(0, floatsPerVertex, GL_FLOAT, GL_FALSE, stride, 0);
+    glEnableVertexAttribArray(0); // enables the vertex attribute array numbered 0
+    // normals attribute -- instructs GPU how to handle normals data
+    glVertexAttribPointer(1, floatsPerNormals, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1); // enables the vertex attribute array numbered 0
+    // texture coordinate attribute -- instructs GPU how to handle texture coordinates
+    glVertexAttribPointer(2, floatsPerUV, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2); // enables the vertex attribute array numbered 0
+}
+
+
+/* ------------------- Set up buffers for plate cylinder -------------------*/
+void setupPlateBuffers(GLMesh& mesh)
+{
+    const GLuint floatsPerVertex = 3;
+    const GLuint floatsPerNormals = 3;
+    const GLuint floatsPerUV = 2;
+    const GLuint floatsInEachStride = 8;
+
+    glBindVertexArray(mesh.vao[5]); // activate vertex array object
+
+    // Activates the first buffer
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.vbos[8]);
+    // Sends vertex data to the GPU
+    glBufferData(GL_ARRAY_BUFFER, cylinder3.getInterleavedVertexSize(), cylinder3.getInterleavedVertices(), GL_STATIC_DRAW);
+
+    // activate second buffer for index array
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.vbos[9]);
+    // stores indices[] array on GPU
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, cylinder3.getIndexSize(), cylinder3.getIndices(), GL_STATIC_DRAW);
+
+    // The number of floats that make up a block of vertex data. Should be 32 bytes
+    GLint stride = cylinder3.getInterleavedStride();
+
+    // Create Vertex Attribute Pointers
+    // position attribute -- instructs GPU how to handle vertex position data
+    glVertexAttribPointer(0, floatsPerVertex, GL_FLOAT, GL_FALSE, stride, 0);
+    glEnableVertexAttribArray(0); // enables the vertex attribute array numbered 0
+    // normals attribute -- instructs GPU how to handle normals data
+    glVertexAttribPointer(1, floatsPerNormals, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1); // enables the vertex attribute array numbered 0
+    // texture coordinate attribute -- instructs GPU how to handle texture coordinates
+    glVertexAttribPointer(2, floatsPerUV, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2); // enables the vertex attribute array numbered 0
+
+}
+
 
 
 /* ------------------- Create plane mesh -------------------*/
@@ -1031,9 +1263,9 @@ void createCubeMesh() {
 void UDestroyMesh(GLMesh& mesh)
 {
     // delete the VAOs
-    glDeleteVertexArrays(3, mesh.vao);
+    glDeleteVertexArrays(6, mesh.vao);
     // delete the VBOs
-    glDeleteBuffers(6, mesh.vbos);
+    glDeleteBuffers(8, mesh.vbos);
 }
 
 

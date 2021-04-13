@@ -146,10 +146,12 @@
   <ItemGroup>
     <ClCompile Include="3d_scene_recreation.cpp" />
     <ClCompile Include="Cylinder.cpp" />
+    <ClCompile Include="Sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cylinder.h" />
+    <ClInclude Include="Sphere.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
