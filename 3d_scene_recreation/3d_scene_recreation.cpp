@@ -222,7 +222,6 @@ void main()
     // FIRST LIGHT:
     //-------------
     //Calculate Ambient lighting*/
-    //float ambientStrength = 0.1f; // Set ambient or global lighting strength
     vec3 ambient = ambientStrength * lightColor1; // Generate ambient light color
 
     //Calculate Diffuse lighting*/
@@ -232,7 +231,6 @@ void main()
     vec3 diffuse = impact * lightColor1; // Generate diffuse light color
 
     //Calculate Specular lighting*/
-    //float specularIntensity = 0.5f; // Set specular light strength
     float highlightSize = 16.0f; // Set specular highlight size
     vec3 viewDir = normalize(viewPosition - vertexFragmentPos); // Calculate view direction
     vec3 reflectDir = reflect(-lightDirection, norm);// Calculate reflection vector
@@ -404,7 +402,6 @@ int main(int argc, char* argv[])
 
     // Release shader programs
     UDestroyShaderProgram(gProgramId);
-    //UDestroyShaderProgram(gProgramId2);
 
     exit(EXIT_SUCCESS); // Terminates the program successfully
 }
@@ -615,7 +612,6 @@ void URender()
         glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
     }
 
-
     // Enable z-depth
     glEnable(GL_DEPTH_TEST);
 
@@ -680,7 +676,6 @@ void URender()
     GLint ambientStrengthLoc = glGetUniformLocation(gProgramId, "ambientStrength");
     GLint diffuseStrengthLoc = glGetUniformLocation(gProgramId, "diffuseStrength");
     GLint specularIntensityLoc = glGetUniformLocation(gProgramId, "specularIntensity");
-    //GLint objectColorLoc = glGetUniformLocation(gProgramId, "objectColor");
 
     // Pass color, light, and camera data to the shader program's corresponding uniforms
     glUniform3f(lightColor1Loc, gLightColor1.r, gLightColor1.g, gLightColor1.b);
@@ -746,7 +741,6 @@ void URender()
     glBindTexture(GL_TEXTURE_2D, gTextureCup);
 
     // Draw cup handle piece #1
-    //glDrawElements(GL_TRIANGLES, cube1.indices.size(), GL_UNSIGNED_INT, NULL);
     glDrawArrays(GL_TRIANGLES, 0, cube1.verts.size() / 8);
 
     // Deactivate the Vertex Array Object
@@ -795,7 +789,6 @@ void URender()
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
     // change lighting components for this object
     glUniform3f(ambientStrengthLoc, 0.0001f, 0.0001f, 0.0001f);
-    //glUniform3f(diffuseStrengthLoc, 0.1f, 0.1f, 0.1f);
     glUniform1f(specularIntensityLoc, 1.0f);
 
     // tell fragment shader there is not multiple textures
@@ -810,7 +803,6 @@ void URender()
 
     // Draw the plane
     glDrawArrays(GL_TRIANGLES, 0, plane1.verts.size() / 8);
-    //glDrawElements(GL_TRIANGLES, gMesh.nIndices, GL_UNSIGNED_INT, NULL);
 
     // set lighting components back to normal
     glUniform3f(ambientStrengthLoc, gAmbientStrength.r, gAmbientStrength.g, gAmbientStrength.b);
@@ -851,7 +843,6 @@ void URender()
 
     // Draw the plane
     glDrawArrays(GL_TRIANGLES, 0, plane1.verts.size() / 8);
-    //glDrawElements(GL_TRIANGLES, gMesh.nIndices, GL_UNSIGNED_INT, NULL);
 
     // set lighting components back to normal
     glUniform3f(ambientStrengthLoc, gAmbientStrength.r, gAmbientStrength.g, gAmbientStrength.b);
@@ -975,7 +966,7 @@ void URender()
 
 
 
-/* ------------------- Set up buffers for cup cylinder -------------------*/
+/* ------------------- Set up GPU buffers for cup cylinder -------------------*/
 void setupCupBuffers(GLMesh& mesh)
 {
     const GLuint floatsPerVertex = 3;
@@ -1012,7 +1003,7 @@ void setupCupBuffers(GLMesh& mesh)
 
 
 
-/* ------------------- Set up buffers for plane -------------------*/
+/* ------------------- Set up GPU buffers for plane -------------------*/
 void setupPlaneBuffers(GLMesh& mesh) {
     const GLuint floatsPerVertex = 3;
     const GLuint floatsPerNormals = 3;
@@ -1042,7 +1033,7 @@ void setupPlaneBuffers(GLMesh& mesh) {
 }
 
 
-/* ------------------- Set up buffers for cup handle cubes -------------------*/
+/* ------------------- Set up GPU buffers for cup handle cubes -------------------*/
 void setupHandleBuffers(GLMesh& mesh) {
 
     const GLuint floatsPerVertex = 3;
@@ -1073,7 +1064,7 @@ void setupHandleBuffers(GLMesh& mesh) {
 }
 
 
-/* ------------------- Set up buffers for tea cylinder -------------------*/
+/* ------------------- Set up GPU buffers for tea cylinder -------------------*/
 void setupTeaBuffers(GLMesh& mesh)
 {
     const GLuint floatsPerVertex = 3;
@@ -1110,7 +1101,7 @@ void setupTeaBuffers(GLMesh& mesh)
 }
 
 
-/* ------------------- Set up buffers for orange sphere -------------------*/
+/* ------------------- Set up GPU buffers for orange sphere -------------------*/
 void setupSphereBuffers(GLMesh& mesh)
 {
     const GLuint floatsPerVertex = 3;
@@ -1146,7 +1137,7 @@ void setupSphereBuffers(GLMesh& mesh)
 }
 
 
-/* ------------------- Set up buffers for plate cylinder -------------------*/
+/* ------------------- Set up GPU buffers for plate cylinder -------------------*/
 void setupPlateBuffers(GLMesh& mesh)
 {
     const GLuint floatsPerVertex = 3;
@@ -1269,7 +1260,8 @@ void UDestroyMesh(GLMesh& mesh)
 }
 
 
-/*Generate and load the texture*/
+
+/* ------------------- Generate and load the texture -------------------*/
 bool UCreateTexture(const char* filename, GLuint& textureId, int textureUnit)
 {
     int width, height, channels;
@@ -1330,12 +1322,14 @@ bool UCreateTexture(const char* filename, GLuint& textureId, int textureUnit)
 }
 
 
+/* ------------------- Deletes a texture -------------------*/
 void UDestroyTexture(GLuint textureId)
 {
     glGenTextures(1, &textureId);
 }
 
 
+/* ------------------- Flip image vertically -------------------*/
 // Images are loaded with Y axis going down, but OpenGL's Y axis goes up, so let's flip it
 void flipImageVertically(unsigned char* image, int width, int height, int channels)
 {
@@ -1417,6 +1411,8 @@ bool UCreateShaderProgram(const char* vtxShaderSource, const char* fragShaderSou
     return true;
 }
 
+
+
 /* ------------------- Destroy shader program -------------------*/
 void UDestroyShaderProgram(GLuint programId)
 {
@@ -1425,9 +1421,7 @@ void UDestroyShaderProgram(GLuint programId)
 
 
 
-
-
-// for debugging
+// FOR DEBUGGING
 void APIENTRY glDebugOutput(GLenum source,
     GLenum type,
     unsigned int id,
