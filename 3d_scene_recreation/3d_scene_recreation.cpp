@@ -33,8 +33,8 @@ namespace
     const char* const WINDOW_TITLE = "Breakfast"; // Macro for window title
 
     // Variables for window width and height
-    const int WINDOW_WIDTH = 800;
-    const int WINDOW_HEIGHT = 500;
+    const int WINDOW_WIDTH = 2560;
+    const int WINDOW_HEIGHT = 1440;
 
     // Stores the GL data relative to a given mesh
     struct GLMesh
