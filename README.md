@@ -17,6 +17,7 @@ https://www.youtube.com/watch?v=_Ou3yA71gnU
 
 # Sreenshots
 ![Front:](screenshots/front.jpg)
+![Left:](screenshots/close_left.jpg)
 ![Left:](screenshots/left.jpg)
 ![Back:](screenshots/back.jpg)
 ![Right:](screenshots/right.jpg)
