@@ -16,7 +16,11 @@ to recreate the original photograph's objects.
 https://www.youtube.com/watch?v=_Ou3yA71gnU
 
 # Sreenshots
-![Login window:]()
+![Front:](screenshots/front.jpg)
+![Left:](screenshots/left.jpg)
+![Back:](screenshots/back.jpg)
+![Right:](screenshots/right.jpg)
+![Top Left:](screenshots/top_left.jpg)
 
 # Tools Used
 1. **C++** - an object-oriented and lower-level programming language. For
