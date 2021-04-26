@@ -1,7 +1,9 @@
-# About the Project
-3D rendering of a still photograph using C++ programming language and 
-OpenGL library. This is a 3D recreation of a picture of
-a teacup and an orange on a wooden table.
+# Overview
+This is a 3D recreation of a 2D picture of
+a teacup and an orange on a wooden table. The rendering was
+generated using C++ and the OpenGL library API. 
+The user can navigate the scene with intuitive mouse and 
+keyboard controls.
 
 # Depth of Project
 The project explores linear algebra, model transformations, 
@@ -38,3 +40,13 @@ https://github.com/g-truc/glm
 4. **stb_image.h** - a header-only library for loading images of
 various file-types. This library is available at 
 https://github.com/nothings/stb
+
+# Scene Navigation
+##### Keyboard:
+**W, A, S, D** - moves camera forward, left, back, right <br>
+**Q, E** - moves camera up and down <br>
+**P** - changes scene between orthographic and
+perspective projection matrices
+##### Mouse:
+**Cursor** - adjusts camera pitch and yaw <br>
+**Scroll** - adjusts speed of camera movement <br>
